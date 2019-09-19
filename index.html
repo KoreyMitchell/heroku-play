@@ -1,39 +1,111 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-  <head>
-    <style>
-      .hidden {
-        display: none;
-      }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
-  </head>
-  <body>
-    <h1>Spot The Bingo</h1>
-    <button id="grabmore">Fetch 10 Bingos</button>
-    <ul id="bingos">
+<header><title>Word Twist!</title></header>    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<body id="body1">
+    <header>Welcome to my Wordtwist!</header>
+
+    Please Enter your Name: <input type="text" id="name">
+    <p></p>
+
+    <button onclick="randomRackGenerator()">
+            Random Rack
+    </button>
+
+    <h2 id = "Rack">...</h2>
+
+ 
+    <p></p>
+    <button onclick="checkRack()">Check</button>
+
+    Please Enter your guess: <input type="text" id="guess">
+    <p></p>
+    
+    <h3>Correct Guesses</h3>
+    <h2 id = "correct"></h2>
+    <ul id = "correct-answers">
+        
     </ul>
-  </body>
-  <script>
-    $(document).ready(function(){
-      
-      let showRacks = function(racks){
-        $("#bingos").html('');
-        racks.map(rack=>{
-          $("#bingos").append(`<li>${rack.rack}: <span class="answer hidden">${rack.words}</span></li>`);
-        });a
-        $("#bingos li").on("click", function(evt){
-          $(evt.currentTarget).find(".answer").toggleClass("hidden");
-        });
-      }
-      
-      $("#grabmore").on("click", function(){
-        $.ajax({
-            method: "GET",
-            url: "api.php",
-            success: data=>{ showRacks(data)}
-        });
-      });
-    });
-  </script>
+    <script>
+        var rackSize = 0;
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var charactersLength = characters.length;
+        var result = new Array(7);
+        var resultString = "";
+        var wordList = new Array();
+        var correctGuessList = new Array();
+        var randomRackGenerator = function (evt){
+            
+            for ( var i = 0; i < 7; i++ ) {
+                result[i] = characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            console.log(JSON.stringify(result));
+            result.sort();
+            console.log(JSON.stringify(result));
+        
+            resultString =result.join('');
+            console.log(resultString);
+            //resultString = resultString.substring(0, resultString.length).replace(",","")
+            console.log(resultString);
+            document.getElementById("Rack").innerText = result;
+            /*$.ajax({
+                    method: "GET",
+                    url: "api.php",
+                    data: { "receiver":resultString},
+                    success: data=>{ wordList = data}
+            }); */
+            
+            $.ajax({
+                method: "GET",
+                url: "api.php",
+                data: { "receiver": resultString},
+                success : function(data) {
+                    handleData(data);
+                }
+            })
+        }
+        var handleData = function(data) {
+            document.getElementById("correct-answers").innerHTML = "";
+            wordList = handleDuplicates(data);
+            console.log(data);
+            console.log("in handle data");
+            // Create list elements for each word
+            wordList.forEach( function(word) {
+                console.log(word);
+                var li = document.createElement('li');
+                li.innerHTML = word;
+                li.style.listStyle ="none";
+                li.style.visibility="hidden";
+                li.setAttribute("id", word);
+                document.getElementById("correct-answers").append(li);
+                document.getElementById("correct-answers").append("   Word Size = " + word.length);
+            
+            });
+        }
+        
+        // Used to delete duplicates in the array.
+        var handleDuplicates = function(data) {
+            let newArray = [];
+            data.forEach( function(word){
+                if(!newArray.includes(word)){
+                    newArray.push(word)
+                }
+            })
+            return newArray;
+        }
+        
+        var checkRack = function (evt){
+            var fee = document.getElementById("guess").value;
+            fee = fee.toUpperCase();
+            if(wordList.includes(fee,0) && correctGuessList.includes(fee,0) == 0){
+                correctGuessList.push(fee);
+                document.getElementById(fee).style.visibility = "visible";
+            }
+            
+        }
+        
+        
+    </script>
+
+</body>
 </html>
